@@ -17,7 +17,7 @@ process getFastaQualityReport {
 	container params.fastqcImage
 
 	input:
-	set val(name), file(reads)
+	tuple val(name), file(reads)
 
     script:
     """

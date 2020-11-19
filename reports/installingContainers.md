@@ -9,6 +9,12 @@ samtools
 $ cd /path/to/containers
 $ singularity pull https://depot.galaxyproject.org/singularity/samtools:1.9--h91753b0_8
 ```
+sambamba
+--------
+```
+$ singularity pull https://depot.galaxyproject.org/singularity/sambamba:0.7.1--h984e79f_3 
+```
+I haven't had succes with sambamba so far. 
 
 trimmomatic
 -----------
@@ -40,3 +46,4 @@ bwa
 $ cd /path/to/containers
 $ singularity pull https://depot.galaxyproject.org/singularity/bwa:0.7.8--hed695b0_5
 ```
+We need to make our own container here that contains both `bwa` and `samtools`. They can be used together in the same process (tha read alignment one) but this means we need a single container. Need to write a Dockerfile and make the image. 
