@@ -4,12 +4,11 @@ nextflow.enable.dsl=2
 workflow {
 
 	inputPairReads = channel
-		.fromFilePairs(params.outputDir + 's1.trimmed_P{1,2}.fq')
+		.fromFilePairs(params.outputDir + 'c1.raw.trimmed_P{1,2}.fq')
 		.ifEmpty { error "Cannot find any read file pairs in ${params.rawReadsDir}" }
 		.view()
 
 	alignReadsToReference(inputPairReads) \
-		| convertAlignedReadsFromSamToBamAndSort \
 		| addReadGroupInfo \
 		| markDuplicateReads \
 		| checkBamFile \
@@ -24,31 +23,21 @@ process alignReadsToReference {
 	tuple val(name), path(readsFilePair)
 
 	output:
-	tuple val(name), path("${name}.sam")
+	tuple val(name), path("${name}.bam")
 
 	script:
 	"""
 	bwa mem \
 		-t ${params.threads} \
 		${params.referenceSequence['dir']}bwa.${params.referenceSequence['label']} \
-		${readsFilePair[0]} ${readsFilePair[1]} > ${name}.sam
+		${readsFilePair[0]} ${readsFilePair[1]} | \
+			samtools view \
+				-b - | \
+				samtools sort \
+					-@ ${params.threads} \
+					-o ${name}.bam
 	"""
 
-}
-
-process convertAlignedReadsFromSamToBamAndSort {
-	container params.samtoolsImage
-
-	input:
-	tuple val(name), path(samFile)
-
-	output:
-	tuple val(name), path("${name}.bam")
-
-	script:
-	"""
-	samtools view -b ${samFile} | samtools sort -@ ${params.threads} -o ${name}.bam
-	"""
 }
 
 process addReadGroupInfo {

@@ -4,7 +4,7 @@ nextflow.enable.dsl=2
 workflow {
 
 	inputPairReads = channel
-		.fromFilePairs(params.rawReadsDir + 's1_{1,2}.fq')
+		.fromFilePairs(params.rawReadsDir + 'c1.raw_{1,2}P.fq')
 		.ifEmpty { error "Cannot find any read file pairs in ${params.rawReadsDir}" }
 		.view()
 
