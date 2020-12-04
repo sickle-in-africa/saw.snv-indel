@@ -3,24 +3,27 @@ nextflow.enable.dsl=2
 
 workflow {
 
-	inputAlignedReads = channel
-		.fromPath(params.outputDir + 's1.aligned.bam')
-		.ifEmpty { error "Cannot find any aligned read file in ${params.outputDir}" }
-		.view()
+	Channel
+		.fromPath(params.outputDir + 'aligned/' + params.cohortId + "*.bam")
+		.map { file -> tuple(file.baseName, file) } \
+		| indexInputBamFile \
+		| callVariantsForEachSample \
+		| map { path -> "-V ${path} " } \
+		| collect \
+		| map { x -> x.join(" ") } \
+		| combineSampleGvcfFiles \
+		| genotypeCombinedGvcfFile
 
-	indexInputBamFile(inputAlignedReads) \
-		| callVariantsPerSample \
-		| saveVCFToOutputDir
 }
 
 process indexInputBamFile {
 	container params.samtoolsImage
 
 	input:
-	path bamFile
+	tuple val(bamId), path(bamFile)
 
 	output:
-	tuple val('s1'), path("s1.aligned.bam"), path("s1.aligned.bam.bai")
+	tuple val(bamId), path(bamFile), path("${bamFile}.bai")
 
 	script:
 	"""
@@ -31,31 +34,56 @@ process indexInputBamFile {
 	"""
 }
 
-process callVariantsPerSample {
+process callVariantsForEachSample {
 	container params.gatk4Image
 
 	input:
-	tuple val(sampleID), path(alignedBamFile), path(alignedBamIndex)
+	tuple val(bamId), path(bamFile), path(bamIndex)
 
 	output:
-	tuple val("${sampleID}"), path("${sampleID}.raw.g.vcf")
+	path "${bamId}.g.vcf"
 
 	script:
 	"""
 	gatk HaplotypeCaller \
 		-R ${params.referenceSequence['path']} \
-		-I ${alignedBamFile} \
-		-O ${sampleID}.raw.g.vcf
+		-I ${bamFile} \
+		-O ${bamId}.g.vcf \
+		--lenient true \
+		-ERC GVCF
 	"""
 }
 
-process saveVCFToOutputDir {
+
+process combineSampleGvcfFiles {
+	container params.gatk4Image
 
 	input:
-	tuple val(sampleID), path(vcfFile)
+	val gvcfList
+
+	output:
+	path "${params.cohortId}.g.vcf"
 
 	script:
 	"""
-	cat ${vcfFile} > ${params.outputDir}${sampleID}.raw.g.vcf
+	gatk CombineGVCFs \
+		-R ${params.referenceSequence['path']} \
+		${gvcfList} \
+		-O ${params.cohortId}.g.vcf
+	"""
+}
+
+process genotypeCombinedGvcfFile {
+	container params.gatk4Image
+
+	input:
+	path combinedGvcfFile
+
+	script:
+	"""
+	gatk GenotypeGVCFs \
+		-R ${params.referenceSequence['path']} \
+		-V ${params.cohortId}.g.vcf \
+		-O ${params.outputDir}${params.cohortId}.genotyped.g.vcf
 	"""
 }

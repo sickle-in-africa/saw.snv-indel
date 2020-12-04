@@ -3,17 +3,14 @@ nextflow.enable.dsl=2
 
 workflow {
 
-	inputPairReads = channel
-		.fromFilePairs(params.outputDir + 's1.trimmed_P{1,2}.fq')
-		.ifEmpty { error "Cannot find any read file pairs in ${params.rawReadsDir}" }
-		.view()
-
-	getFastaQualityReport(inputPairReads)
+	Channel
+		.fromFilePairs(params.outputDir + 'trimmedReads/' + params.readFilePairGlob)
+		.ifEmpty { error "Cannot find any read trimmed file pairs matching: ${params.readFilePairGlob}" } \
+		| getFastaQualityReport
 	
 }
 
 process getFastaQualityReport {
-	echo true
 	container params.fastqcImage
 
 	input:
@@ -21,9 +18,10 @@ process getFastaQualityReport {
 
     script:
     """
+    mkdir -p ${params.outputDir}fastqc/trimmed/
     fastqc \
     	-t ${params.threads} \
-    	-o ${params.outputDir} \
+    	-o ${params.outputDir}fastqc/trimmed/ \
     	${reads[0]} ${reads[1]}
 
     """

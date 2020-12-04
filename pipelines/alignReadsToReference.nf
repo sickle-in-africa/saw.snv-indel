@@ -3,12 +3,10 @@ nextflow.enable.dsl=2
 
 workflow {
 
-	inputPairReads = channel
-		.fromFilePairs(params.outputDir + 'c1.raw.trimmed_P{1,2}.fq')
-		.ifEmpty { error "Cannot find any read file pairs in ${params.rawReadsDir}" }
-		.view()
-
-	alignReadsToReference(inputPairReads) \
+	Channel
+		.fromFilePairs(params.outputDir + 'trimmedReads/' + params.readFilePairGlob)
+		.ifEmpty { error "Cannot find any read trimmed file pairs matching: ${params.readFilePairGlob}" } \
+		| alignReadsToReference \
 		| addReadGroupInfo \
 		| markDuplicateReads \
 		| checkBamFile \
@@ -82,7 +80,6 @@ process markDuplicateReads {
 }
 
 process checkBamFile {
-	echo true
 	container params.gatk4Image
 
 	input:
@@ -114,7 +111,6 @@ process recalibrateBaseQualityScores {
 }
 
 process saveBamFileToOutputDir {
-	echo true
 	container params.samtoolsImage
 
 	input:
@@ -122,9 +118,10 @@ process saveBamFileToOutputDir {
 
 	script:
 	"""
+	mkdir -p ${params.outputDir}aligned
 	samtools view \
 		-b \
-		-o ${params.outputDir}s1.aligned.bam \
+		-o ${params.outputDir}aligned/${name}.bam \
 		${bamFile}
 	"""
 }

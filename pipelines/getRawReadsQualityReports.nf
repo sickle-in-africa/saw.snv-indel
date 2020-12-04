@@ -3,28 +3,25 @@ nextflow.enable.dsl=2
 
 workflow {
 
-	inputPairReads = channel
-		.fromFilePairs(params.rawReadsDir + 's1_{1,2}.fq')
-		.ifEmpty { error "Cannot find any read file pairs in ${params.rawReadsDir}" }
-		.view()
-
-	getFastaQualityReport(inputPairReads)
-
+	Channel
+		.fromFilePairs(params.rawReadsDir + params.readFilePairGlob)
+		.ifEmpty { error "Cannot find any read file pairs that match: ${params.readFilePairGlob}" } \
+		| getFastaQualityReport
 }
 
+
 process getFastaQualityReport {
-	echo true
 	container params.fastqcImage
 
 	input:
-	tuple val(name), file(reads)
+	tuple val(name), path(reads)
 
     script:
     """
+    mkdir -p ${params.outputDir}fastqc
     fastqc \
     	-t ${params.threads} \
-    	-o ${params.outputDir} \
+    	-o ${params.outputDir}fastqc/ \
     	${reads[0]} ${reads[1]}
-
     """
 }

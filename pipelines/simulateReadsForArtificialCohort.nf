@@ -1,21 +1,22 @@
 #!/usr/bin/env nextflow
 nextflow.enable.dsl=2
 
+
 workflow {
 
-	simulationInputs = channel
-		.fromPath(params.simulationInputs)
-		.ifEmpty { error "Cannot find any input file in ${params.projectDir}" }
-		.view()
+	Channel
+		.fromPath(params.simulationInputs) \
+		| mutateReference \
+		| sortTruthVcfFile
 
-	writeSampleIdList(simulationInputs) | view
-
-	//mutateReference(simulationInputs)
-	
-	//generateReads(mutateReference.out)
-
-	//sortTruthVcfFile(mutateReference.out)
+	Channel
+		.of(1..params.nSamples)
+		.map { x -> "${params.cohortId}_S${x}" }
+		.map { x -> "${params.rawReadsDir}${x}" }
+		.combine(sortTruthVcfFile.out) \
+		| generateReads
 }
+
 
 process mutateReference {
 	container params.simulatorImage
@@ -24,7 +25,7 @@ process mutateReference {
 	path simulationInputs
 
 	output:
-	tuple path(simulationInputs), path("${params.referenceSequence['label']}.mutated.fa"), path("c_1.truth.g.vcf")
+	tuple path(simulationInputs), path("${params.referenceSequence['label']}.mutated.fa"), path("${params.cohortId}.truth.g.vcf")
 
 	script:
 	"""
@@ -32,24 +33,10 @@ process mutateReference {
 		--input_ref ${params.referenceSequence['path']} \
 		--output_ref ${params.referenceSequence['label']}.mutated.fa \
 		--input_json ${simulationInputs} \
-		--output_vcf c_1.truth.g.vcf
+		--output_vcf ${params.cohortId}.truth.g.vcf
 	"""
 }
 
-process generateReads {
-	container params.simulatorImage
-
-	input:
-	tuple path(simulationInputs), path(mutatedReference), path(truthVcfFile)
-
-	script:
-	"""
-	simulate GenerateReads \
-		--input_ref ${mutatedReference} \
-		--reads_prefix ${params.rawReadsDir}c1.raw \
-		--input_json ${simulationInputs}
-	"""
-}
 
 process sortTruthVcfFile {
 	container params.bcftoolsImage
@@ -57,26 +44,29 @@ process sortTruthVcfFile {
 	input:
 	tuple path(simulationInputs), path(mutatedReference), path(truthVcfFile)
 
+	output:
+	tuple path(simulationInputs), path(mutatedReference)	
+
 	script:
 	"""
 	bcftools sort \
 		${truthVcfFile} \
-		-o ${params.outputDir}/c_1.truth.g.vcf
+		-o ${params.outputDir}/${params.cohortId}.truth.g.vcf
 	"""
 }
 
-process writeSampleIdList {
+
+process generateReads {
+	container params.simulatorImage
 
 	input:
-	path simulationInputs
-
-	output:
-	stdout
+	tuple val(readsPrefix),  path(simulationInputs), path(mutatedReference)
 
 	script:
 	"""
-	python3 ${params.toolsDir}writeSimulationSampleList.py \
-		--inputJSON ${simulationInputs} \
-		--readsDir ${params.rawReadsDir}
+	simulate GenerateReads \
+		--input_ref ${mutatedReference} \
+		--reads_prefix ${readsPrefix} \
+		--input_json ${simulationInputs}
 	"""
 }
