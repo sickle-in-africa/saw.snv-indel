@@ -16,12 +16,12 @@ process getFastaQualityReport {
 	input:
 	tuple val(name), path(reads)
 
-    script:
-    """
-    mkdir -p ${params.outputDir}fastqc
-    fastqc \
-    	-t ${params.threads} \
-    	-o ${params.outputDir}fastqc/ \
-    	${reads[0]} ${reads[1]}
-    """
+	script:
+	"""
+	mkdir -p ${params.outputDir}fastqc
+	fastqc \
+		-t ${params.threads} \
+		-o ${params.outputDir}fastqc/ \
+		${reads[0]} ${reads[1]}
+	"""
 }
