@@ -7,11 +7,15 @@ workflow {
 		.fromFilePairs(params.rawReadsDir + params.readFilePairGlob)
 		.ifEmpty { error "Cannot find any read file pairs in ${params.rawReadsDir}" } \
 		| trimRawReads
-		
 }
 
 process trimRawReads {
-	container params.trimmomaticImage
+    beforeScript "source ${params.processConfigFile}"
+    container params.trimmomaticImage
+    clusterOptions = params.clusterOptions
+    queue = params.serverOptions['queue']
+    time =  '15m'
+    jobName = 'trimRawReads'
 
 	input:
 	tuple val(name), path(reads)

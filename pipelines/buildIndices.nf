@@ -12,7 +12,12 @@ workflow {
 }
 
 process buildBwaIndex {
-	container params.bwaImage
+    beforeScript "source ${params.processConfigFile}"
+    container params.bwaImage
+    clusterOptions = params.clusterOptions
+    queue = params.serverOptions['queue']
+    time =  '5m'
+    jobName = 'buildBwaIndex'
 
 	when:
 	!file(params.referenceSequence['dir'] + 'bwa.' + params.referenceSequence['label'] + '.amb').exists()
@@ -27,7 +32,12 @@ process buildBwaIndex {
 }
 
 process buildSamtoolsIndex {
-	container params.samtoolsImage
+    beforeScript "source ${params.processConfigFile}"
+    container params.samtoolsImage
+    clusterOptions = params.clusterOptions
+    queue = params.serverOptions['queue']
+    time =  '5m'
+    jobName = 'buildSamtoolsIndex'
 
 	when:
 	!file(params.referenceSequence['path'] + '.fai').exists()
@@ -39,7 +49,12 @@ process buildSamtoolsIndex {
 }
 
 process buildGATKDictionary {
-	container params.gatk4Image
+    beforeScript "source ${params.processConfigFile}"
+    container params.gatk4Image
+    clusterOptions = params.clusterOptions
+    queue = params.serverOptions['queue']
+    time =  '5m'
+    jobName = 'buildGatkDictionary'
 
 	when:
 	!file(params.referenceSequence['dir'] + params.referenceSequence['label'] + '.dict').exists()

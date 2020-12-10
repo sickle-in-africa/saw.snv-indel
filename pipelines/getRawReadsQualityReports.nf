@@ -11,7 +11,12 @@ workflow {
 
 
 process getFastaQualityReport {
-	container params.fastqcImage
+    beforeScript "source ${params.processConfigFile}"
+    container params.fastqcImage
+    clusterOptions = params.clusterOptions
+    queue = params.serverOptions['queue']
+    time =  '15m'
+    jobName = 'getFastaQualityReport'
 
 	input:
 	tuple val(name), path(reads)
