@@ -46,11 +46,18 @@ bwa
 $ cd /path/to/containers
 $ singularity pull docker://sickleinafrica/bwa:0.7.17
 ```
-We need to make our own container here that contains both `bwa` and `samtools`. They can be used together in the same process (the read alignment one) but this means we need a single container. Need to write a Dockerfile and make the image.
+We have made our own container here that contains both `bwa` and `samtools`. They are used together in the same process (alignReadsToReference.nf::alignReadsToReference) which means we need a single container.
 
 sequence-simulator
 ------------------
 ```
 $ cd /path/to/containers
 $ singularity pull docker://sickleinafrica/sequence-simulator:0.1
+```
+
+gatk 4
+------
+```
+$ cd /path/to/containers
+$ singularity pull docker://broadinstitute/gatk
 ```
