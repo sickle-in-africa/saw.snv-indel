@@ -15,7 +15,12 @@ workflow {
 }
 
 process alignReadsToReference {
-	container params.bwaImage
+    beforeScript "source ${params.processConfigFile}"
+    container params.bwaImage
+    clusterOptions = params.clusterOptions
+    queue = params.serverOptions['queue']
+    time =  '10m'
+    jobName = 'alignReadsToReference'
 
 	input:
 	tuple val(name), path(readsFilePair)
@@ -39,7 +44,12 @@ process alignReadsToReference {
 }
 
 process addReadGroupInfo {
-	container params.gatk4Image
+    beforeScript "source ${params.processConfigFile}"
+    container params.gatk4Image
+    clusterOptions = params.clusterOptions
+    queue = params.serverOptions['queue']
+    time =  '10m'
+    jobName = 'addReadGroupInfo'
 
 	input:
 	tuple val(name), path(bamFile)
@@ -61,7 +71,12 @@ process addReadGroupInfo {
 }
 
 process markDuplicateReads {
-	container params.gatk4Image
+    beforeScript "source ${params.processConfigFile}"
+    container params.gatk4Image
+    clusterOptions = params.clusterOptions
+    queue = params.serverOptions['queue']
+    time =  '10m'
+    jobName = 'markDuplicateReads'
 
 	input:
 	tuple val(name), path(bamFile)
@@ -80,7 +95,12 @@ process markDuplicateReads {
 }
 
 process checkBamFile {
-	container params.gatk4Image
+    beforeScript "source ${params.processConfigFile}"
+    container params.gatk4Image
+    clusterOptions = params.clusterOptions
+    queue = params.serverOptions['queue']
+    time =  '10m'
+    jobName = 'checkBamFile'
 
 	input:
 	tuple val(name), path(markedBamFile)
@@ -111,7 +131,12 @@ process recalibrateBaseQualityScores {
 }
 
 process saveBamFileToOutputDir {
-	container params.samtoolsImage
+    beforeScript "source ${params.processConfigFile}"
+    container params.samtoolsImage
+    clusterOptions = params.clusterOptions
+    queue = params.serverOptions['queue']
+    time =  '10m'
+    jobName = 'saveBamFileToOutputDir'
 
 	input:
 	tuple val(name), path(bamFile)

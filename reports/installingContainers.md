@@ -7,7 +7,7 @@ samtools
 --------
 ```
 $ cd /path/to/containers
-$ singularity pull https://depot.galaxyproject.org/singularity/samtools:1.9--h91753b0_8
+$ singularity pull docker://sickleinafrica/samtools:1.11
 ```
 sambamba
 --------

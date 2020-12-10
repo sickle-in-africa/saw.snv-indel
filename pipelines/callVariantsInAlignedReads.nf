@@ -17,7 +17,12 @@ workflow {
 }
 
 process indexInputBamFile {
-	container params.samtoolsImage
+    beforeScript "source ${params.processConfigFile}"
+    container params.samtoolsImage
+    clusterOptions = params.clusterOptions
+    queue = params.serverOptions['queue']
+    time =  '10m'
+    jobName = 'indexInputBamFile'
 
 	input:
 	tuple val(bamId), path(bamFile)
@@ -35,7 +40,12 @@ process indexInputBamFile {
 }
 
 process callVariantsForEachSample {
-	container params.gatk4Image
+    beforeScript "source ${params.processConfigFile}"
+    container params.gatk4Image
+    clusterOptions = params.clusterOptions
+    queue = params.serverOptions['queue']
+    time =  '10m'
+    jobName = 'callVariantsForEachSample'
 
 	input:
 	tuple val(bamId), path(bamFile), path(bamIndex)
@@ -56,7 +66,12 @@ process callVariantsForEachSample {
 
 
 process combineSampleGvcfFiles {
-	container params.gatk4Image
+    beforeScript "source ${params.processConfigFile}"
+    container params.gatk4Image
+    clusterOptions = params.clusterOptions
+    queue = params.serverOptions['queue']
+    time =  '10m'
+    jobName = 'combineSampleGvcfFiles'
 
 	input:
 	val gvcfList
@@ -74,7 +89,12 @@ process combineSampleGvcfFiles {
 }
 
 process genotypeCombinedGvcfFile {
-	container params.gatk4Image
+    beforeScript "source ${params.processConfigFile}"
+    container params.gatk4Image
+    clusterOptions = params.clusterOptions
+    queue = params.serverOptions['queue']
+    time =  '10m'
+    jobName = 'genotypeCombinedGvcfFile'
 
 	input:
 	path combinedGvcfFile
