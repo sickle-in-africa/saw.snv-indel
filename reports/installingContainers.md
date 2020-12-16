@@ -1,7 +1,9 @@
-installing containers
+Installing containers
 =====================
 
-we use singularity. The [Biocontainers project]() and [galaxy project depot](https://depot.galaxyproject.org/singularity/) are particularly helpful.
+We use singularity to manage software used by the workflow. Sickle In Africa has its own Docker Hub organisation page, which you can view [here](https://hub.docker.com/orgs/sickleinafrica/repositories).
+
+We have followed the do-one-thing rule from functional programming here, and chosen to create a container image for each tool.
 
 samtools
 --------
@@ -9,35 +11,19 @@ samtools
 $ cd /path/to/containers
 $ singularity pull docker://sickleinafrica/samtools:1.11
 ```
-sambamba
---------
-```
-$ singularity pull https://depot.galaxyproject.org/singularity/sambamba:0.7.1--h984e79f_3 
-```
-I haven't had succes with sambamba so far. 
 
 trimmomatic
 -----------
 ```
 $ cd /path/to/containers
-$ singularity pull https://depot.galaxyproject.org/singularity/trimmomatic:0.39--1
-```
-This container actually contains a jar file, `trimmomatic.jar`, which is *inside the container*, at the following path: `/usr/local/share/trimmomatic-0.39-1/trimmomatic.jar`. 
-
-To check this, run:
-```
-$ cd /path/to/containers
-$ singularity run trimmomatic:039--1
-Singularity> ls /usr/local/share
-trimmomatic-0.39-1/
-```
-Then, if you search the contents of `/usr/local/share` on your own machine outside of the container, you should not find this folder. 
+$ singularity pull docker://sickleinafrica/trimmomatic:0.39
+This container actually contains a jar file, `trimmomatic-0.39.jar`, which is *inside the container*, at the following path: `/usr/local/share/applications/Trimmomatic-0.39/trimmomatic-0.39.jar`.  
 
 fastqc
 ------
 ```
 cd /path/to/containers
-$ singularity pull https://depot.galaxyproject.org/singularity/fastqc:0.11.9--0
+$ singularity pull docker://sickleinafrica/fastqc:0.11.9
 ```
 
 bwa
@@ -46,7 +32,7 @@ bwa
 $ cd /path/to/containers
 $ singularity pull docker://sickleinafrica/bwa:0.7.17
 ```
-We have made our own container here that contains both `bwa` and `samtools`. They are used together in the same process (alignReadsToReference.nf::alignReadsToReference) which means we need a single container.
+We have made our own container here that contains both `bwa 0.7.17` and `samtools 1.11`. They are used together in the same process (alignReadsToReference.nf::alignReadsToReference) which means we need a single container.
 
 sequence-simulator
 ------------------
@@ -61,3 +47,20 @@ gatk 4
 $ cd /path/to/containers
 $ singularity pull docker://broadinstitute/gatk
 ```
+
+bcftools
+--------
+```
+$ cd /path/to/containers
+$ singularity pull docker://sickleinafrica/bcftools:1.11
+```
+
+bamstats
+--------
+
+Taken from [here](http://bamstats.sourceforge.net/).
+```
+$ cd /path/to/containers
+$ singularity pull docker://sickleinafrica/bamstats:1.25
+```
+
