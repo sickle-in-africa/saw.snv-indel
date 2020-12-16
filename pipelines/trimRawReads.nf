@@ -14,8 +14,7 @@ process trimRawReads {
     container params.trimmomaticImage
     clusterOptions = params.clusterOptions
     queue = params.serverOptions['queue']
-    time =  '15m'
-    jobName = 'trimRawReads'
+    time =  params.serverOptions['time']
 
 	input:
 	tuple val(name), path(reads)
@@ -24,10 +23,10 @@ process trimRawReads {
 	"""
 	mkdir -p ${params.outputDir}trimmedReads/
 	java -jar ${params.trimmomaticJar} PE \
-		-threads ${params.threads} \
+		-threads ${params.nThreadsPerProcess} \
 		${reads[0]} ${reads[1]} \
-		${params.outputDir}trimmedReads/${name}_R1.fq ${params.outputDir}trimmedReads/${name}_UR1.fq \
-		${params.outputDir}trimmedReads/${name}_R2.fq ${params.outputDir}trimmedReads/${name}_UR2.fq \
+		${params.outputDir}trimmedReads/${reads[0]} ${params.outputDir}trimmedReads/unpaired_${reads[0]} \
+		${params.outputDir}trimmedReads/${reads[1]} ${params.outputDir}trimmedReads/unpaired_${reads[1]} \
 		LEADING:${params.trimLeadX} \
 		TRAILING:${params.trimTrailX} \
 		SLIDINGWINDOW:5:${params.trimMinAverageQuality} \

@@ -16,8 +16,7 @@ process buildBwaIndex {
     container params.bwaImage
     clusterOptions = params.clusterOptions
     queue = params.serverOptions['queue']
-    time =  '5m'
-    jobName = 'buildBwaIndex'
+    time =  params.serverOptions['time']
 
 	when:
 	!file(params.referenceSequence['dir'] + 'bwa.' + params.referenceSequence['label'] + '.amb').exists()
@@ -26,7 +25,6 @@ process buildBwaIndex {
 	"""
 	bwa index \
 			-p ${params.referenceSequence['dir']}bwa.${params.referenceSequence['label']} \
-			-a is \
 			${params.referenceSequence['path']}
 	"""
 }
@@ -36,8 +34,7 @@ process buildSamtoolsIndex {
     container params.samtoolsImage
     clusterOptions = params.clusterOptions
     queue = params.serverOptions['queue']
-    time =  '5m'
-    jobName = 'buildSamtoolsIndex'
+    time =  params.serverOptions['time']
 
 	when:
 	!file(params.referenceSequence['path'] + '.fai').exists()
@@ -53,8 +50,7 @@ process buildGATKDictionary {
     container params.gatk4Image
     clusterOptions = params.clusterOptions
     queue = params.serverOptions['queue']
-    time =  '5m'
-    jobName = 'buildGatkDictionary'
+    time =  params.serverOptions['time']
 
 	when:
 	!file(params.referenceSequence['dir'] + params.referenceSequence['label'] + '.dict').exists()

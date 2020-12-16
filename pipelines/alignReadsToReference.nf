@@ -19,8 +19,7 @@ process alignReadsToReference {
     container params.bwaImage
     clusterOptions = params.clusterOptions
     queue = params.serverOptions['queue']
-    time =  '10m'
-    jobName = 'alignReadsToReference'
+    time =  params.serverOptions['time']
 
 	input:
 	tuple val(name), path(readsFilePair)
@@ -31,13 +30,13 @@ process alignReadsToReference {
 	script:
 	"""
 	bwa mem \
-		-t ${params.threads} \
+		-t ${params.nThreadsPerProcess} \
 		${params.referenceSequence['dir']}bwa.${params.referenceSequence['label']} \
 		${readsFilePair[0]} ${readsFilePair[1]} | \
 			samtools view \
 				-b - | \
 				samtools sort \
-					-@ ${params.threads} \
+					-@ ${params.nThreadsPerProcess} \
 					-o ${name}.bam
 	"""
 
@@ -48,8 +47,7 @@ process addReadGroupInfo {
     container params.gatk4Image
     clusterOptions = params.clusterOptions
     queue = params.serverOptions['queue']
-    time =  '10m'
-    jobName = 'addReadGroupInfo'
+    time =  params.serverOptions['time']
 
 	input:
 	tuple val(name), path(bamFile)
@@ -75,8 +73,7 @@ process markDuplicateReads {
     container params.gatk4Image
     clusterOptions = params.clusterOptions
     queue = params.serverOptions['queue']
-    time =  '10m'
-    jobName = 'markDuplicateReads'
+    time =  params.serverOptions['time']
 
 	input:
 	tuple val(name), path(bamFile)
@@ -99,8 +96,8 @@ process checkBamFile {
     container params.gatk4Image
     clusterOptions = params.clusterOptions
     queue = params.serverOptions['queue']
-    time =  '10m'
-    jobName = 'checkBamFile'
+    time =  params.serverOptions['time']
+
 
 	input:
 	tuple val(name), path(markedBamFile)
@@ -135,8 +132,7 @@ process saveBamFileToOutputDir {
     container params.samtoolsImage
     clusterOptions = params.clusterOptions
     queue = params.serverOptions['queue']
-    time =  '10m'
-    jobName = 'saveBamFileToOutputDir'
+    time =  params.serverOptions['time']
 
 	input:
 	tuple val(name), path(bamFile)

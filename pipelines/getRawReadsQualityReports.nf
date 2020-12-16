@@ -15,18 +15,17 @@ process getFastaQualityReport {
     container params.fastqcImage
     clusterOptions = params.clusterOptions
     queue = params.serverOptions['queue']
-    time =  '15m'
-    jobName = 'getFastaQualityReport'
+    time =  params.serverOptions['time']
 
 	input:
 	tuple val(name), path(reads)
 
 	script:
 	"""
-	mkdir -p ${params.outputDir}fastqc
+	mkdir -p ${params.outputDir}quality-reports
 	fastqc \
-		-t ${params.threads} \
-		-o ${params.outputDir}fastqc/ \
+		-t ${params.nThreadsPerProcess} \
+		-o ${params.outputDir}quality-reports/ \
 		${reads[0]} ${reads[1]}
 	"""
 }

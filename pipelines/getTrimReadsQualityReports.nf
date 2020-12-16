@@ -7,21 +7,24 @@ workflow {
 		.fromFilePairs(params.outputDir + 'trimmedReads/' + params.readFilePairGlob)
 		.ifEmpty { error "Cannot find any read trimmed file pairs matching: ${params.readFilePairGlob}" } \
 		| getFastaQualityReport
-	
 }
 
 process getFastaQualityReport {
-	container params.fastqcImage
+    beforeScript "source ${params.processConfigFile}"
+    container params.fastqcImage
+    clusterOptions = params.clusterOptions
+    queue = params.serverOptions['queue']
+    time =  params.serverOptions['time']
 
 	input:
 	tuple val(name), file(reads)
 
     script:
     """
-    mkdir -p ${params.outputDir}fastqc/trimmed/
+    mkdir -p ${params.outputDir}quality-reports/trimmed/
     fastqc \
-    	-t ${params.threads} \
-    	-o ${params.outputDir}fastqc/trimmed/ \
+    	-t ${params.nThreadsPerProcess} \
+    	-o ${params.outputDir}quality-reports/trimmed/ \
     	${reads[0]} ${reads[1]}
 
     """
