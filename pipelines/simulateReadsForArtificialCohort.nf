@@ -19,13 +19,6 @@ workflow {
 
 
 process mutateReference {
-    beforeScript "source ${params.processConfigFile}"
-    container params.simulatorImage
-    clusterOptions = params.clusterOptions
-    queue = params.serverOptions['queue']
-    time =  '15m'
-    jobName = 'mutateReference'
-
 	container params.simulatorImage
 
 	input:
@@ -46,12 +39,7 @@ process mutateReference {
 
 
 process sortTruthVcfFile {
-    beforeScript "source ${params.processConfigFile}"
-    container params.bcftoolsImage
-    clusterOptions = params.clusterOptions
-    queue = params.serverOptions['queue']
-    time =  '5m'
-    jobName = 'sortTruthVcfFile'
+	container params.bcftoolsImage
 
 	input:
 	tuple path(simulationInputs), path(mutatedReference), path(truthVcfFile)
@@ -61,26 +49,23 @@ process sortTruthVcfFile {
 
 	script:
 	"""
+	mkdir -p ${params.variantSetsDir}
 	bcftools sort \
 		${truthVcfFile} \
-		-o ${params.outputDir}/${params.cohortId}.truth.g.vcf
+		-o ${params.variantSetsDir}/${params.cohortId}.truth.g.vcf
 	"""
 }
 
 
 process generateReads {
-    beforeScript "source ${params.processConfigFile}"
-    container params.simulatorImage
-    clusterOptions = params.clusterOptions
-    queue = params.serverOptions['queue']
-    time =  '20m'
-    jobName = 'generateReads'
+	container params.simulatorImage
 
 	input:
 	tuple val(readsPrefix),  path(simulationInputs), path(mutatedReference)
 
 	script:
 	"""
+	mkdir -p ${params.rawReadsDir}
 	simulate GenerateReads \
 		--input_ref ${mutatedReference} \
 		--reads_prefix ${readsPrefix} \

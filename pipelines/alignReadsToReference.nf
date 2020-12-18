@@ -39,7 +39,6 @@ process alignReadsToReference {
 					-@ ${params.nThreadsPerProcess} \
 					-o ${name}.bam
 	"""
-
 }
 
 process addReadGroupInfo {
