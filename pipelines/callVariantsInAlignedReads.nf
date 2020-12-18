@@ -4,7 +4,7 @@ nextflow.enable.dsl=2
 workflow {
 
 	Channel
-		.fromPath(params.outputDir + 'aligned/' + params.cohortId + "*.bam")
+		.fromPath(params.alignedReadsDir + params.cohortId + "*.bam")
 		.map { file -> tuple(file.baseName, file) } \
 		| indexInputBamFile \
 		| callVariantsForEachSample \
@@ -17,11 +17,7 @@ workflow {
 
 
 process indexInputBamFile {
-    beforeScript "source ${params.processConfigFile}"
     container params.samtoolsImage
-    clusterOptions = params.clusterOptions
-    queue = params.serverOptions['queue']
-    time =  params.serverOptions['time']
 
 	input:
 	tuple val(bamId), path(bamFile)
@@ -39,11 +35,10 @@ process indexInputBamFile {
 }
 
 process callVariantsForEachSample {
-    beforeScript "source ${params.processConfigFile}"
     container params.gatk4Image
-    clusterOptions = params.clusterOptions
-    queue = params.serverOptions['queue']
-    time =  params.serverOptions['time']
+    label 'bigMemory'
+    label 'bigDuration'
+    label 'parallel'
 
 	input:
 	tuple val(bamId), path(bamFile), path(bamIndex)
@@ -64,11 +59,7 @@ process callVariantsForEachSample {
 
 
 process combineSampleGvcfFiles {
-    beforeScript "source ${params.processConfigFile}"
     container params.gatk4Image
-    clusterOptions = params.clusterOptions
-    queue = params.serverOptions['queue']
-    time =  params.serverOptions['time']
 
 	input:
 	val gvcfList
@@ -86,11 +77,7 @@ process combineSampleGvcfFiles {
 }
 
 process genotypeCombinedGvcfFile {
-    beforeScript "source ${params.processConfigFile}"
     container params.gatk4Image
-    clusterOptions = params.clusterOptions
-    queue = params.serverOptions['queue']
-    time =  params.serverOptions['time']
 
 	input:
 	path combinedGvcfFile
@@ -100,6 +87,6 @@ process genotypeCombinedGvcfFile {
 	gatk GenotypeGVCFs \
 		-R ${params.referenceSequence['path']} \
 		-V ${params.cohortId}.g.vcf \
-		-O ${params.outputDir}${params.cohortId}.genotyped.g.vcf
+		-O ${params.variantSetsDir}${params.cohortId}.genotyped.g.vcf
 	"""
 }

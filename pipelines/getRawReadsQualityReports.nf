@@ -11,21 +11,17 @@ workflow {
 
 
 process getFastaQualityReport {
-    beforeScript "source ${params.processConfigFile}"
     container params.fastqcImage
-    clusterOptions = params.clusterOptions
-    queue = params.serverOptions['queue']
-    time =  params.serverOptions['time']
 
 	input:
 	tuple val(name), path(reads)
 
 	script:
 	"""
-	mkdir -p ${params.outputDir}quality-reports
+	mkdir -p ${params.qualityReportsDir}
 	fastqc \
 		-t ${params.nThreadsPerProcess} \
-		-o ${params.outputDir}quality-reports/ \
+		-o ${params.qualityReportsDir} \
 		${reads[0]} ${reads[1]}
 	"""
 }

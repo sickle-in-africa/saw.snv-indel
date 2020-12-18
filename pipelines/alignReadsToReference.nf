@@ -4,22 +4,22 @@ nextflow.enable.dsl=2
 workflow {
 
 	Channel
-		.fromFilePairs(params.outputDir + 'trimmedReads/' + params.readFilePairGlob)
+		.fromFilePairs(params.trimmedReadsDir + params.readFilePairGlob)
 		.ifEmpty { error "Cannot find any read trimmed file pairs matching: ${params.readFilePairGlob}" } \
 		| alignReadsToReference \
 		| addReadGroupInfo \
 		| markDuplicateReads \
         | addTagInfo \
+        | recalibrateBaseQualityScores \
 		| checkBamFile \
 		| saveBamFileToOutputDir
 }
 
 process alignReadsToReference {
-    beforeScript "source ${params.processConfigFile}"
     container params.bwaImage
-    clusterOptions = params.clusterOptions
-    queue = params.serverOptions['queue']
-    time = '09:00:00' // params.serverOptions['time']
+    label 'bigMemory'
+    label 'bigDuration'
+    label 'parallel'
 
 	input:
 	tuple val(name), path(readsFilePair)
@@ -42,11 +42,7 @@ process alignReadsToReference {
 }
 
 process addReadGroupInfo {
-    beforeScript "source ${params.processConfigFile}"
     container params.gatk4Image
-    clusterOptions = params.clusterOptions
-    queue = params.serverOptions['queue']
-    time = '01:00:00' // params.serverOptions['time']
 
 	input:
 	tuple val(name), path(bamFile)
@@ -67,11 +63,7 @@ process addReadGroupInfo {
 }
 
 process markDuplicateReads {
-    beforeScript "source ${params.processConfigFile}"
     container params.gatk4Image
-    clusterOptions = params.clusterOptions
-    queue = params.serverOptions['queue']
-    time = '01:30:00' //params.serverOptions['time']
 
 	input:
 	tuple val(name), path(bamFile)
@@ -89,11 +81,7 @@ process markDuplicateReads {
 }
 
 process addTagInfo {
-    beforeScript "source ${params.processConfigFile}"
     container params.gatk4Image
-    clusterOptions = params.clusterOptions
-    queue = params.serverOptions['queue']
-    time = '01:30:00' //params.serverOptions['time']
 
     input:
     tuple val(name), path(bamFile)
@@ -111,57 +99,61 @@ process addTagInfo {
 
 }
 
-process checkBamFile {
-    beforeScript "source ${params.processConfigFile}"
-    container params.gatk4Image
-    clusterOptions = params.clusterOptions
-    queue = params.serverOptions['queue']
-    time = '01:30:00' //params.serverOptions['time']
+process recalibrateBaseQualityScores {
+	container params.gatk4Image
 
 	input:
-	tuple val(name), path(markedBamFile)
+	tuple val(name), path(bamFile)
+
+    output:
+    tuple val(name), path("${name}.recal.bam")
+
+	script:
+	if ( file("${params.baseQualityRecalibrationTable}").exists() )
+		"""
+		gatk ApplyBQSR \
+			-R reference.fasta \
+			-I ${bamFile} \
+			--bqsr-recal-file ${params.baseQualityRecalibrationTable} \
+			-O ${name}.recal.bam
+	   	"""
+	else
+		"""
+		ln -s ${bamFile} ${name}.recal.bam
+		"""
+}
+
+process checkBamFile {
+    container params.gatk4Image
+
+	input:
+	tuple val(name), path(bamFile)
 
 	output:
-	tuple val(name), path("${markedBamFile}")
+	tuple val(name), path("${bamFile}")
 
 	script:
 	"""
 	gatk ValidateSamFile \
-		-I ${markedBamFile} \
+		-I ${bamFile} \
 		-R ${params.referenceSequence['path']} \
 		--TMP_DIR ${params.tempDir} \
 		-M VERBOSE
 	"""
 }
 
-process recalibrateBaseQualityScores {
-	container params.gatk4Image
-
-	input:
-	tuple val(name), path(markedBamFile)
-
-	script:
-	"""
-	echo "we will write this process when we are working with human samples. 
-	"""
-}
-
 process saveBamFileToOutputDir {
-    beforeScript "source ${params.processConfigFile}"
     container params.samtoolsImage
-    clusterOptions = params.clusterOptions
-    queue = params.serverOptions['queue']
-    time = '02:00:00' //params.serverOptions['time']
 
 	input:
 	tuple val(name), path(bamFile)
 
 	script:
 	"""
-	mkdir -p ${params.outputDir}aligned
+	mkdir -p ${params.alignedReadsDir}
 	samtools view \
 		-b \
-		-o ${params.outputDir}aligned/${name}.bam \
+		-o ${params.alignedReadsDir}${name}.bam \
 		${bamFile}
 	"""
 }
