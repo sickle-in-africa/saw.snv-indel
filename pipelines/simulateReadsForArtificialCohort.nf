@@ -20,6 +20,8 @@ workflow {
 
 process mutateReference {
 	container params.simulatorImage
+	label 'bigMemory'
+	label 'smallDuration'
 
 	input:
 	path simulationInputs
@@ -40,6 +42,8 @@ process mutateReference {
 
 process sortTruthVcfFile {
 	container params.bcftoolsImage
+	label 'smallMemory'
+	label 'smallDuration'
 
 	input:
 	tuple path(simulationInputs), path(mutatedReference), path(truthVcfFile)
@@ -59,6 +63,8 @@ process sortTruthVcfFile {
 
 process generateReads {
 	container params.simulatorImage
+	label 'bigMemory'
+	label 'bigDuration'
 
 	input:
 	tuple val(readsPrefix),  path(simulationInputs), path(mutatedReference)
