@@ -64,6 +64,7 @@ process addReadGroupInfo {
 
 process markDuplicateReads {
     container params.gatk4Image
+    label 'bigMemory'
 
 	input:
 	tuple val(name), path(bamFile)
