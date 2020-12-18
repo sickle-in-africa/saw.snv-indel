@@ -9,9 +9,9 @@ workflow {
 		| alignReadsToReference \
 		| addReadGroupInfo \
 		| markDuplicateReads \
+        | addTagInfo \
 		| checkBamFile \
 		| saveBamFileToOutputDir
-
 }
 
 process alignReadsToReference {
@@ -19,7 +19,7 @@ process alignReadsToReference {
     container params.bwaImage
     clusterOptions = params.clusterOptions
     queue = params.serverOptions['queue']
-    time =  params.serverOptions['time']
+    time = '09:00:00' // params.serverOptions['time']
 
 	input:
 	tuple val(name), path(readsFilePair)
@@ -47,7 +47,7 @@ process addReadGroupInfo {
     container params.gatk4Image
     clusterOptions = params.clusterOptions
     queue = params.serverOptions['queue']
-    time =  params.serverOptions['time']
+    time = '01:00:00' // params.serverOptions['time']
 
 	input:
 	tuple val(name), path(bamFile)
@@ -60,11 +60,10 @@ process addReadGroupInfo {
 	gatk AddOrReplaceReadGroups \
 		-I ${bamFile} \
 		-O ${name}.withRGs.bam \
-		-SM not_sure \
+		-SM ${name} \
 		-PL ILLUMINA \
-		-PU not_sure \
-		-ID ${name} \
-		-LB not_sure
+		-PU abcd \
+		-LB 1234
 	"""
 }
 
@@ -73,7 +72,7 @@ process markDuplicateReads {
     container params.gatk4Image
     clusterOptions = params.clusterOptions
     queue = params.serverOptions['queue']
-    time =  params.serverOptions['time']
+    time = '01:30:00' //params.serverOptions['time']
 
 	input:
 	tuple val(name), path(bamFile)
@@ -88,6 +87,28 @@ process markDuplicateReads {
 		-O "${name}.marked.bam" \
 		-M "${name}.marked_dup_metrics.txt"
 	"""
+}
+
+process addTagInfo {
+    beforeScript "source ${params.processConfigFile}"
+    container params.gatk4Image
+    clusterOptions = params.clusterOptions
+    queue = params.serverOptions['queue']
+    time = '01:30:00' //params.serverOptions['time']
+
+    input:
+    tuple val(name), path(bamFile)
+
+    output:
+    tuple val(name), path("${name}.fixed.bam")
+
+    script:
+    """
+    gatk SetNmMdAndUqTags \
+        -R ${params.referenceSequence['path']} \
+        -I ${bamFile} \
+        -O "${name}.fixed.bam"
+    """
 
 }
 
@@ -96,8 +117,7 @@ process checkBamFile {
     container params.gatk4Image
     clusterOptions = params.clusterOptions
     queue = params.serverOptions['queue']
-    time =  params.serverOptions['time']
-
+    time = '01:30:00' //params.serverOptions['time']
 
 	input:
 	tuple val(name), path(markedBamFile)
@@ -111,7 +131,7 @@ process checkBamFile {
 		-I ${markedBamFile} \
 		-R ${params.referenceSequence['path']} \
 		--TMP_DIR ${params.tempDir} \
-		-M SUMMARY
+		-M VERBOSE
 	"""
 }
 
@@ -132,7 +152,7 @@ process saveBamFileToOutputDir {
     container params.samtoolsImage
     clusterOptions = params.clusterOptions
     queue = params.serverOptions['queue']
-    time =  params.serverOptions['time']
+    time = '02:00:00' //params.serverOptions['time']
 
 	input:
 	tuple val(name), path(bamFile)
