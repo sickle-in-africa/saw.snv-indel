@@ -19,6 +19,8 @@ workflow {
 process indexInputBamFile {
     container params.samtoolsImage
 
+    label 'parallel'
+
 	input:
 	tuple val(bamId), path(bamFile)
 
