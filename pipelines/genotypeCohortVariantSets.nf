@@ -13,48 +13,38 @@ workflow {
 		| map { x -> x.join(" ") } \
 		| combineSampleGvcfFiles \
 		| genotypeCombinedGvcfFile
+
 }
 
-
-process indexInputBamFile {
-    container params.samtoolsImage
-
-    label 'parallel'
-
-	input:
-	tuple val(bamId), path(bamFile)
-
-	output:
-	tuple val(bamId), path(bamFile), path("${bamFile}.bai")
-
-	script:
-	"""
-	samtools index \
-		-b \
-		-@ ${params.nThreadsPerProcess} \
-		${bamFile}
-	"""
-}
-
-process callVariantsForEachSample {
+process combineSampleGvcfFiles {
     container params.gatk4Image
 
-    label 'reallyBigDuration'
-    label 'parallel'
-
 	input:
-	tuple val(bamId), path(bamFile), path(bamIndex)
+	val gvcfList
 
 	output:
-	path "${bamId}.g.vcf"
+	path "${params.cohortId}.g.vcf"
 
 	script:
 	"""
-	gatk HaplotypeCaller \
+	gatk CombineGVCFs \
 		-R ${params.referenceSequence['path']} \
-		-I ${bamFile} \
-		-O ${bamId}.g.vcf \
-		--lenient true \
-		-ERC GVCF
+		${gvcfList} \
+		-O ${params.cohortId}.g.vcf
 	"""
 }
+
+process genotypeCombinedGvcfFile {
+    container params.gatk4Image
+
+	input:
+	path combinedGvcfFile
+
+	script:
+	"""
+	gatk GenotypeGVCFs \
+		-R ${params.referenceSequence['path']} \
+		-V ${params.cohortId}.g.vcf \
+		-O ${params.variantSetsDir}${params.cohortId}.genotyped.g.vcf
+	"""
+} 
