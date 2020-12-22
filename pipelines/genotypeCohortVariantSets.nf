@@ -4,11 +4,8 @@ nextflow.enable.dsl=2
 workflow {
 
 	Channel
-		.fromPath(params.alignedReadsDir + params.cohortId + "*.bam")
-		.map { file -> tuple(file.baseName, file) } \
-		| indexInputBamFile \
-		| callVariantsForEachSample \
-		| map { path -> "-V ${path} " } \
+		.fromPath(params.variantSetsDir + params.cohortId + "*.g.vcf.gz")
+		.map { path -> "-V ${path} " } \
 		| collect \
 		| map { x -> x.join(" ") } \
 		| combineSampleGvcfFiles \

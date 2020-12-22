@@ -7,12 +7,7 @@ workflow {
 		.fromPath(params.alignedReadsDir + params.cohortId + "*.bam")
 		.map { file -> tuple(file.baseName, file) } \
 		| indexInputBamFile \
-		| callVariantsForEachSample \
-		| map { path -> "-V ${path} " } \
-		| collect \
-		| map { x -> x.join(" ") } \
-		| combineSampleGvcfFiles \
-		| genotypeCombinedGvcfFile
+		| callVariantsForEachSample
 }
 
 
@@ -45,15 +40,12 @@ process callVariantsForEachSample {
 	input:
 	tuple val(bamId), path(bamFile), path(bamIndex)
 
-	output:
-	path "${bamId}.g.vcf"
-
 	script:
 	"""
 	gatk HaplotypeCaller \
 		-R ${params.referenceSequence['path']} \
 		-I ${bamFile} \
-		-O ${bamId}.g.vcf \
+		-O ${params.variantSetsDir}${bamId}.g.vcf.gz \
 		--lenient true \
 		-ERC GVCF
 	"""
