@@ -38,8 +38,8 @@ process indexInputBamFile {
 
 process callVariantsForEachSample {
     container params.gatk4Image
-    label 'bigMemory'
-    label 'bigDuration'
+
+    label 'reallyBigDuration'
     label 'parallel'
 
 	input:
