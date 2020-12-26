@@ -42,10 +42,11 @@ process callVariantsForEachSample {
 
 	script:
 	"""
+    mkdir -p ${params.variantSetsDir}
 	gatk HaplotypeCaller \
 		-R ${params.referenceSequence['path']} \
 		-I ${bamFile} \
-		-O ${params.variantSetsDir}${bamId}.g.vcf.gz \
+		-O ${params.variantSetsDir}${bamId}.g.vcf \
 		--lenient true \
 		-ERC GVCF
 	"""
