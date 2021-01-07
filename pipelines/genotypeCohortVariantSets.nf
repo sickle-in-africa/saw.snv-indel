@@ -14,6 +14,9 @@ workflow {
 }
 
 process combineSampleGvcfFiles {
+	label 'withMaxMemory'
+	label 'withMaxCpus'
+	label 'withMaxTime'
     container params.gatk4Image
 
 	input:
@@ -32,6 +35,9 @@ process combineSampleGvcfFiles {
 }
 
 process genotypeCombinedGvcfFile {
+	label 'withMaxMemory'
+	label 'withMaxCpus'
+	label 'withMaxTime'
     container params.gatk4Image
 
 	input:

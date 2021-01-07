@@ -12,11 +12,10 @@ workflow {
 }
 
 process buildBwaIndex {
-    beforeScript "source ${params.processConfigFile}"
+	label 'withMaxMemory'
+	label 'withMaxCpus'
+	label 'withMaxTime'
     container params.bwaImage
-    clusterOptions = params.clusterOptions
-    queue = params.serverOptions['queue']
-    time =  params.serverOptions['time']
 
 	when:
 	!file(params.referenceSequence['dir'] + 'bwa.' + params.referenceSequence['label'] + '.amb').exists()
@@ -30,11 +29,10 @@ process buildBwaIndex {
 }
 
 process buildSamtoolsIndex {
-    beforeScript "source ${params.processConfigFile}"
+	label 'withMaxMemory'
+	label 'withMaxCpus'
+	label 'withMaxTime'
     container params.samtoolsImage
-    clusterOptions = params.clusterOptions
-    queue = params.serverOptions['queue']
-    time =  params.serverOptions['time']
 
 	when:
 	!file(params.referenceSequence['path'] + '.fai').exists()
@@ -46,11 +44,10 @@ process buildSamtoolsIndex {
 }
 
 process buildGATKDictionary {
-    beforeScript "source ${params.processConfigFile}"
+	label 'withMaxMemory'
+	label 'withMaxCpus'
+	label 'withMaxTime'
     container params.gatk4Image
-    clusterOptions = params.clusterOptions
-    queue = params.serverOptions['queue']
-    time =  params.serverOptions['time']
 
 	when:
 	!file(params.referenceSequence['dir'] + params.referenceSequence['label'] + '.dict').exists()

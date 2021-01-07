@@ -12,15 +12,17 @@ workflow {
 	Channel
 		.of(1..params.nSamples)
 		.map { x -> "${params.cohortId}_S${x}" }
-		.map { x -> "${params.rawReadsDir}${x}" }
+		.map { x -> "${params.rawReadsDir}/${x}" }
 		.combine(sortTruthVcfFile.out) \
 		| generateReads
 }
 
 
 process mutateReference {
+	label 'withMaxMemory'
+	label 'withMaxCpus'
+	label 'withMaxTime'
 	container params.simulatorImage
-	label 'bigMemory'
 
 	input:
 	path simulationInputs
@@ -40,6 +42,9 @@ process mutateReference {
 
 
 process sortTruthVcfFile {
+	label 'withMaxMemory'
+	label 'withMaxCpus'
+	label 'withMaxTime'
 	container params.bcftoolsImage
 
 	input:
@@ -59,9 +64,10 @@ process sortTruthVcfFile {
 
 
 process generateReads {
+	label 'withMaxMemory'
+	label 'withMaxCpus'
+	label 'withMaxTime'
 	container params.simulatorImage
-	label 'bigMemory'
-	label 'bigDuration'
 
 	input:
 	tuple val(readsPrefix),  path(simulationInputs), path(mutatedReference)

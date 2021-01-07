@@ -4,7 +4,8 @@ nextflow.enable.dsl=2
 workflow {
 
 	Channel
-		.fromPath(params.alignedReadsDir + params.cohortId + "*.bam")
+		.fromPath("${params.alignedReadsDir}/${params.cohortId}*.bam")
+		.ifEmpty { error "Cannot find any read file pairs matching: ${params.alignedReadsDir}/${params.cohortId}*.bam" }
 		.map { file -> tuple(file.baseName, file) } \
 		| indexInputBamFile \
 		| callVariantsForEachSample
@@ -12,9 +13,10 @@ workflow {
 
 
 process indexInputBamFile {
-    container params.samtoolsImage
-
-    label 'parallel'
+	label 'withMaxMemory'
+	label 'withMaxCpus'
+	label 'withMaxTime'
+	container params.samtoolsImage
 
 	input:
 	tuple val(bamId), path(bamFile)
@@ -26,16 +28,16 @@ process indexInputBamFile {
 	"""
 	samtools index \
 		-b \
-		-@ ${params.nThreadsPerProcess} \
+		-@ ${task.cpus} \
 		${bamFile}
 	"""
 }
 
 process callVariantsForEachSample {
+    label 'withMaxMemory'
+    label 'withMaxCpus'
+    label 'withMaxTime'
     container params.gatk4Image
-
-    label 'reallyBigDuration'
-    label 'parallel'
 
 	input:
 	tuple val(bamId), path(bamFile), path(bamIndex)
@@ -43,10 +45,11 @@ process callVariantsForEachSample {
 	script:
 	"""
     mkdir -p ${params.variantSetsDir}
-	gatk HaplotypeCaller \
+    gatk --java-options "-Xmx${task.memory.toGiga()}g" \
+		HaplotypeCaller \
 		-R ${params.referenceSequence['path']} \
 		-I ${bamFile} \
-		-O ${params.variantSetsDir}${bamId}.g.vcf \
+		-O ${params.variantSetsDir}/${bamId}.g.vcf \
 		--lenient true \
 		-ERC GVCF
 	"""
